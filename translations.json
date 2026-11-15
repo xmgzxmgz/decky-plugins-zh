@@ -302,6 +302,38 @@
       "Trend Prediction": "趋势预测",
       "Trends": "趋势",
       "Stats": "统计"
+    },
+    "DeckyClash": {
+      "Service": "服务",
+      "Enable Mihomo": "启用 Mihomo",
+      "Loading ...": "加载中...",
+      "Subscription": "订阅",
+      "Status": "状态",
+      "Dashboard": "面板",
+      "Upload": "上传",
+      "Download": "下载",
+      "Memory": "内存",
+      "Outbound Mode": "出站模式",
+      "Settings": "设置",
+      "Autostart": "自动启动",
+      "Enable Mihomo automatically": "自动启用 Mihomo",
+      "Allow Remote Access": "允许远程访问",
+      "Allow remote to access Dashboard": "允许其他设备访问面板",
+      "Override DNS in Profile": "覆盖配置中的 DNS",
+      "Replace with DNS preset provided by this plugin": "使用本插件提供的 DNS 预设替换",
+      "Enhanced Mode": "增强模式",
+      "Steam Download Use Local CDN": "Steam 下载走本地 CDN",
+      "Skip proxy for relevant detect URLs": "相关检测域名不走代理",
+      "Tools": "工具",
+      "Reload Frontend Config": "重新加载前端配置",
+      "Restart Core": "重启内核",
+      "Force Kill Core": "强制结束内核",
+      "Installation Guide": "安装指引",
+      "Version": "版本",
+      "Plugin": "插件",
+      "Manage Upgrades": "管理升级",
+      "Backup & Restore": "备份与恢复",
+      "About Decky Clash": "关于 Decky Clash"
     }
   }
 }
