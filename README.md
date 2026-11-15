@@ -2,26 +2,57 @@
 
 给 **Steam Deck（SteamOS）** 上的 [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader) 插件加上中文界面。
 
-Decky 商店里的插件绝大多数只有英文，少数内置多语言（德语/西语/法语…）却唯独没有中文。这个补丁把常用插件的界面文案和插件名替换成简体中文，**全部改动可一键回滚**。
+Decky 商店里的插件绝大多数只有英文，少数内置多语言（德语/西语/法语…）却唯独没有中文。这个补丁把常用插件的界面文案替换成简体中文，**全部改动可一键回滚**。
+
+## ⚠️ 千万不要修改插件的 `name`
+
+这是本项目最重要的一条经验，写在这里是为了让你别踩。
+
+Decky 的 IPC（前端调后端）**以 `plugin.json` 的 `name` 作为路由键**，而插件前端在打包时已经把名字写死在了 `dist/index.js` 里：
+
+```js
+const manifest = {"name":"Decky Clash"};        // 打包时固化，不会跟着 plugin.json 变
+const internalAPIConnection = window.__DECKY_SECRET_..._deckyLoaderAPIInit;
+if (!internalAPIConnection) throw new Error('[@decky/api]: Failed to connect to the loader...');
+```
+
+一旦你把 `plugin.json` 的 `name` 改成「代理加速」，后端就以「代理加速」注册，而前端还在找 `Decky Clash` —— **所有后端调用都路由不到，Promise 永久挂起**。
+
+症状很有迷惑性：
+
+| 现象 | 真实情况 |
+|---|---|
+| 插件面板一直显示「加载中…」 | 前端在等一个永远不返回的调用 |
+| 点开关没反应，卡在加载中 | `set_core_status` 之类的调用发不出去 |
+| 退出面板再进来显示「已关闭」 | 前端回落到 `localStorage` 里的旧状态 |
+| 但代理/内核其实在正常工作 | 后端根本没有参与，是内核自己在跑 |
+| 「版本」等字段一片空白 | 所有来自后端的数据都是空的 |
+
+**本项目的 `apply` 不会碰 `name`**，也不会碰 `manifest`。如果你手动改过，或者用了别的脚本，用这个命令体检并自动修复：
+
+```bash
+sudo python3 zh_patch.py doctor
+sudo systemctl restart plugin_loader
+```
 
 ## 支持情况
 
-| 插件（目录名） | 汉化条目 | 显示名 |
-|---|---|---|
-| `SDH-CssLoader` | 102 | 主题美化 |
-| `DeckyClash` | 30 | 代理加速 |
-| `PowerTools` | 76 | 性能调控 |
-| `hltb-for-deck` | 18 | 通关时长 |
-| `decky-steamgriddb` | 18 | 影音封面 |
-| `protondb-decky` | 16 | 兼容性徽章 |
-| `decky-storage-cleaner` | 14 | 存储清理 |
-| `Decky-Undervolt` | 14 | 降压调校 |
-| `moondeck` | 8 | 游戏串流 |
-| `playcount-decky` | 6 | 在线人数 |
-| `Bluetooth` | — | 蓝牙 |
-| `DeckyClash` | — | 代理加速 |
+| 插件（目录名） | 汉化条目 |
+|---|---|
+| `SDH-CssLoader` | 102 |
+| `PowerTools` | 76 |
+| `DeckyClash` | 30 |
+| `hltb-for-deck` | 18 |
+| `decky-steamgriddb` | 18 |
+| `protondb-decky` | 16 |
+| `decky-storage-cleaner` | 14 |
+| `Decky-Undervolt` | 14 |
+| `moondeck` | 8 |
+| `playcount-decky` | 6 |
 
-合计 **302 条文案 + 10 个插件显示名**。
+合计 **302 条文案**，覆盖 10 个插件。
+
+> Decky 面板首屏显示的是插件**名字**，那些是各插件作者定的，本项目不改（原因见上）。改的是进入插件之后的界面文案。
 
 ## 用法
 
@@ -31,15 +62,14 @@ Decky 商店里的插件绝大多数只有英文，少数内置多语言（德�
 # 查看当前汉化状态（不需要 root）
 python3 zh_patch.py status
 
-# 汉化：内部文案 + 插件显示名
+# 汉化
 sudo python3 zh_patch.py apply
 
-# 只汉化内部文案 / 只改显示名
-sudo python3 zh_patch.py text
-sudo python3 zh_patch.py names
-
-# 全部还原英文
+# 还原英文
 sudo python3 zh_patch.py restore
+
+# 体检：检查 plugin.json 与前端 manifest 的插件名是否错位
+sudo python3 zh_patch.py doctor
 ```
 
 改完重启 Decky 生效：
@@ -78,16 +108,17 @@ tr("充电上限")
 |---|---|
 | 自动备份 | 修改前把原文件存为 `*.zhbak`，`restore` 从备份还原 |
 | 引号校验 | 写入前比对双引号数量，与原文不一致就放弃写入，避免破坏 JS |
+| manifest 保护 | `const manifest = {...}` 整块被切出来单独保存，文案替换不会碰到它 |
+| 不碰 `name` | 从不修改 `plugin.json`，从根上避免 IPC 断裂 |
 | 不翻状态值 | `Disabled` / `Enabled` / `Offline` / `Scheduled` 等既用于显示也用于逻辑判断，翻译会让状态错乱，一律跳过 |
 | 不翻代码标识 | CSS 属性（`flex`/`strokeWidth`）、SVG 路径（`M0 0h24v24H0z`）、内部接口名（`GENERAL_load_settings`）全部跳过 |
-| 改显示名是安全的 | Decky 的 `homebrew/settings/<目录>` 用的是**文件夹名**而非 `plugin.json` 的 `name`，因此改显示名不会丢插件配置 |
 
 ## 已知限制
 
-- **插件更新会覆盖汉化**。Decky 装新版插件时会覆盖 `dist/index.js`，更新后重新跑一次 `apply` 即可（脚本会从备份或当前文件重新套用）。
+- **插件更新会覆盖汉化**。Decky 装新版插件时会覆盖 `dist/index.js`，更新后重新跑一次 `apply` 即可。注意 `*.zhbak` 是首次汉化时的原始英文，插件升级后它还是旧版，`apply` 会以旧版为基准替换 —— 若新版文案有变动，建议先删掉 `*.zhbak` 再用 `apply` 重新建立基准。
 - 只覆盖**界面文案**。插件通过 Python 后端返回的动态内容（如 Theme 名称、游戏名、服务器状态）不在范围内。
 - 少数 UI 文案硬编码在图标按钮的 `title` 属性或图标组件里，未逐条处理。
-- 插件名改成中文后，与 Decky 商店里的英文名不再对应，属预期行为。
+- `PowerTools` / `SDH-CssLoader` 是旧式 UMD 打包，不使用 `const manifest`，`doctor` 会跳过它们（正常现象）。
 
 ## 贡献
 
@@ -95,7 +126,6 @@ tr("充电上限")
 
 ```json
 {
-  "plugin_names": { "SDH-CssLoader": "主题美化" },
   "translations": {
     "SDH-CssLoader": { "Last Updated": "最后更新" }
   }
@@ -110,6 +140,8 @@ tr("充电上限")
 grep -oE '"[A-Z][A-Za-z][A-Za-z0-9 ,.:%/()&+_-]{3,50}"' \
   /home/deck/homebrew/plugins/<插件目录>/dist/index.js | sort -u
 ```
+
+**提交 PR 时请只加文案，不要加插件改名。**
 
 ## 免责声明
 

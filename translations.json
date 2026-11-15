@@ -1,17 +1,5 @@
 {
-  "_comment": "Steam Deck Decky 插件中文翻译表。key = 插件目录名，value = {英文原文: 中文}",
-  "plugin_names": {
-    "Bluetooth": "蓝牙",
-    "Decky-Undervolt": "降压调校",
-    "DeckyClash": "代理加速",
-    "PowerTools": "性能调控",
-    "SDH-CssLoader": "主题美化",
-    "decky-storage-cleaner": "存储清理",
-    "hltb-for-deck": "通关时长",
-    "moondeck": "游戏串流",
-    "playcount-decky": "在线人数",
-    "protondb-decky": "兼容性徽章"
-  },
+  "_comment": "Steam Deck Decky 插件中文翻译表。key = 插件目录名，value = {英文原文: 中文}。注意：不要翻译 plugin.json 的 name，那会切断 Decky 的 IPC 路由。",
   "translations": {
     "PowerTools": {
       "Advanced": "高级设置",
